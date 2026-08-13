@@ -4,6 +4,7 @@ import portfolioData from "../data/portfolioData";
 function AIChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [messages, setMessages] = useState([
     {
@@ -12,7 +13,8 @@ function AIChat() {
     },
   ]);
 
-  const getAIResponse = (question) => {
+  // Existing portfolio-based response
+  const getPortfolioResponse = (question) => {
     const q = question.toLowerCase();
 
     if (
@@ -32,7 +34,7 @@ function AIChat() {
         .map((project) => project.title)
         .join(", ");
 
-      return `Kanika has worked on projects including ${projectNames}. Her projects focus on AI, full-stack development, data analytics and practical problem solving.`;
+      return `Kanika's projects include ${projectNames}. Her work focuses on AI, full-stack development, data analytics and practical problem solving.`;
     }
 
     if (
@@ -75,38 +77,117 @@ function AIChat() {
       return portfolioData.description;
     }
 
-    if (
-      q.includes("resume") ||
-      q.includes("cv")
-    ) {
+    if (q.includes("resume") || q.includes("cv")) {
       return "You can view Kanika's resume using the Resume button in the navigation bar or Hero section.";
     }
 
-    return "I can help you learn about Kanika's skills, projects, internships, education, resume and contact information. Try asking something like: \"What are her skills?\"";
+    return null;
   };
 
-  const handleSend = (e) => {
+  // Gemini API call
+  const getGeminiResponse = async (question) => {
+    try {
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: `
+You are Kanika Mohan's AI Portfolio Assistant.
+
+Use the following portfolio information to answer questions:
+
+Name: ${portfolioData.name}
+Role: ${portfolioData.role}
+Description: ${portfolioData.description}
+
+Education:
+${portfolioData.education.degree}
+${portfolioData.education.college}
+${portfolioData.education.duration}
+
+Skills:
+${JSON.stringify(portfolioData.skills)}
+
+Internships:
+${JSON.stringify(portfolioData.internships)}
+
+Projects:
+${JSON.stringify(portfolioData.projects)}
+
+Certifications:
+${JSON.stringify(portfolioData.certifications)}
+
+Answer the user's question clearly and professionally.
+If the question is unrelated to Kanika's portfolio, politely say that you can mainly answer questions about Kanika.
+
+User question:
+${question}
+          `,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "AI request failed");
+      }
+
+      return data.reply;
+    } catch (error) {
+      console.error("Gemini Error:", error);
+
+      return null;
+    }
+  };
+
+  const handleSend = async (e) => {
     e.preventDefault();
 
-    if (!message.trim()) return;
+    if (!message.trim() || isLoading) return;
+
+    const userQuestion = message.trim();
 
     const userMessage = {
       sender: "user",
-      text: message,
+      text: userQuestion,
     };
 
-    const aiResponse = getAIResponse(message);
+    setMessages((prev) => [...prev, userMessage]);
+    setMessage("");
+    setIsLoading(true);
+
+    // First check portfolio-specific answers
+    const portfolioResponse = getPortfolioResponse(userQuestion);
+
+    if (portfolioResponse) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: portfolioResponse,
+        },
+      ]);
+
+      setIsLoading(false);
+      return;
+    }
+
+    // Otherwise use Gemini
+    const aiResponse = await getGeminiResponse(userQuestion);
 
     setMessages((prev) => [
       ...prev,
-      userMessage,
       {
         sender: "ai",
-        text: aiResponse,
+        text:
+          aiResponse ||
+          "Sorry, I couldn't connect to the AI right now. Please try again.",
       },
     ]);
 
-    setMessage("");
+    setIsLoading(false);
   };
 
   return (
@@ -125,7 +206,9 @@ function AIChat() {
           <div className="ai-chat-header">
             <div>
               <h3>AI Portfolio Assistant</h3>
-              <span>Ask me anything about Kanika</span>
+              <span>
+                {isLoading ? "Thinking..." : "Ask me anything about Kanika"}
+              </span>
             </div>
 
             <button
@@ -145,6 +228,12 @@ function AIChat() {
                 {msg.text}
               </div>
             ))}
+
+            {isLoading && (
+              <div className="chat-message ai">
+                Thinking...
+              </div>
+            )}
           </div>
 
           <form
@@ -156,9 +245,10 @@ function AIChat() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Ask about my skills..."
+              disabled={isLoading}
             />
 
-            <button type="submit">
+            <button type="submit" disabled={isLoading}>
               →
             </button>
           </form>
