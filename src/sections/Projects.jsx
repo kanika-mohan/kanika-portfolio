@@ -1,65 +1,4 @@
-const projects = [
-  {
-    title: "Smart Placement Management Portal",
-    category: "AI + Full Stack",
-    description:
-      "An intelligent placement management platform that helps students and recruiters manage job opportunities, applications and recruitment activities with an AI-powered resume analyzer.",
-    technologies: [
-      "React",
-      "Java",
-      "Spring Boot",
-      "SQL",
-      "AI",
-    ],
-    github: "",
-    demo: "",
-    featured: true,
-  },
-
-  {
-    title: "AI Personalized Study Planner",
-    category: "Artificial Intelligence",
-    description:
-      "An AI-based study planning application that creates personalized learning schedules based on student goals, subjects and available study time.",
-    technologies: [
-      "Python",
-      "Machine Learning",
-      "React",
-      "AI",
-    ],
-    github: "",
-    demo: "",
-  },
-
-  {
-    title: "Employee Data Analytics Dashboard",
-    category: "Data Analytics",
-    description:
-      "An interactive analytics dashboard for analyzing employee information, attendance, performance, profit and loss using business intelligence techniques.",
-    technologies: [
-      "Power BI",
-      "Excel",
-      "Data Analytics",
-    ],
-    github: "",
-    demo: "",
-  },
-
-  {
-    title: "News Aggregator",
-    category: "Web Development",
-    description:
-      "A responsive web application that collects and displays news articles through an API with category-based browsing and a clean user interface.",
-    technologies: [
-      "React",
-      "JavaScript",
-      "CSS",
-      "REST API",
-    ],
-    github: "",
-    demo: "",
-  },
-];
+import portfolioData from "../data/portfolioData";
 
 function Projects() {
   return (
@@ -79,24 +18,29 @@ function Projects() {
 
         <div className="projects-grid">
 
-          {projects.map((project) => (
+          {portfolioData.projects.map((project, index) => (
+
             <article
               className={`project-card ${
-                project.featured ? "featured-project" : ""
+                index === 0 ? "featured-project" : ""
               }`}
               key={project.title}
             >
 
               <div className="project-top">
+
                 <span className="project-category">
-                  {project.category}
+                  {index === 0
+                    ? "AI + Full Stack"
+                    : "Web Development"}
                 </span>
 
-                {project.featured && (
+                {index === 0 && (
                   <span className="featured-badge">
                     Featured
                   </span>
                 )}
+
               </div>
 
               <h3>{project.title}</h3>
@@ -140,6 +84,7 @@ function Projects() {
               </div>
 
             </article>
+
           ))}
 
         </div>

@@ -98,7 +98,7 @@ const portfolioData = {
 
   projects: [
     {
-      title: "Smart Placement Management Portal",
+      title: "PlaceWise AI",
       description:
         "AI-powered placement management platform designed to connect students, HR teams and companies with intelligent resume analysis and placement tracking.",
       technologies: [
@@ -107,6 +107,7 @@ const portfolioData = {
         "Spring Boot",
         "AI",
       ],
+      demo:"https://place-wise-g2rwk671h-kani14.vercel.app",
     },
 
     {
